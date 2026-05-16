@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  FOUNDRY_PROFILE: ci
+  MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install dependencies
+        run: forge install
+        working-directory: contracts
+
+      - name: Check formatting
+        run: forge fmt --check
+        working-directory: contracts
+
+      - name: Run Slither static analysis
+        uses: crytic/slither-action@v0.3.0
+        continue-on-error: true
+        with:
+          target: contracts/
+          slither-args: --filter-paths "@openzeppelin|forge-std"
+
+      - name: Run tests
+        run: forge test -vvv
+        working-directory: contracts
+        env:
+          MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+
+      - name: Measure coverage
+        run: forge coverage --report lcov
+        working-directory: contracts
+
+      - name: Generate coverage summary
+        run: |
+          echo "## Coverage Report" >> $GITHUB_STEP_SUMMARY
+          forge coverage --report summary >> $GITHUB_STEP_SUMMARY
+        working-directory: contracts
+        continue-on-error: true
+
+  lint-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+        working-directory: frontend
+      - run: npx tsc --noEmit
+        working-directory: frontend
+        continue-on-error: true
+
+  deploy-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+      - name: Check compilation
+        run: forge build
+        working-directory: contracts
+      - name: Validate deploy script
+        run: forge script script/Deploy.s.sol --dry-run
+        working-directory: contracts

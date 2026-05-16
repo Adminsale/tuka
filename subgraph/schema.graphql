@@ -1,0 +1,60 @@
+type Market @entity {
+  id: ID!
+  marketId: BigInt!
+  question: String!
+  creator: Bytes!
+  resolutionTime: BigInt!
+  resolved: Boolean!
+  winner: Int
+  outcomeToken: Bytes!
+  baseToken: Bytes!
+  reserveYes: BigInt!
+  reserveNo: BigInt!
+  feeBps: Int!
+  totalLpShares: BigInt!
+  createdAt: BigInt!
+  trades: [Trade!]! @derivedFrom(field: "market")
+  liquidityChanges: [LiquidityChange!]! @derivedFrom(field: "market")
+}
+
+type Trade @entity {
+  id: ID!
+  market: Market!
+  trader: Bytes!
+  outcome: Int!
+  amountIn: BigInt!
+  amountOut: BigInt!
+  timestamp: BigInt!
+}
+
+type LiquidityChange @entity {
+  id: ID!
+  market: Market!
+  provider: Bytes!
+  amountYes: BigInt!
+  amountNo: BigInt!
+  shares: BigInt!
+  isAdd: Boolean!
+  timestamp: BigInt!
+}
+
+type Proposal @entity {
+  id: ID!
+  proposalId: BigInt!
+  description: String!
+  proposer: Bytes!
+  startBlock: BigInt!
+  endBlock: BigInt!
+  forVotes: BigInt!
+  againstVotes: BigInt!
+  abstainVotes: BigInt!
+  executed: Boolean!
+  createdAt: BigInt!
+}
+
+type User @entity {
+  id: ID!
+  address: Bytes!
+  votingPower: BigInt!
+  trades: [Trade!]! @derivedFrom(field: "trader")
+}

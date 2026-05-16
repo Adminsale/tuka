@@ -1,0 +1,11 @@
+{
+  "name": "prediction-market-contracts",
+  "version": "1.0.0",
+  "description": "On-Chain Prediction Market - Blockchain Technologies 2 Final Project",
+  "scripts": {
+    "compile": "forge build",
+    "test": "forge test",
+    "coverage": "forge coverage --report lcov",
+    "slither": "slither ."
+  }
+}
