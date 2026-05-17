@@ -8,10 +8,10 @@ A production-ready microservice infrastructure demonstrating SRE practices inclu
 
 | Name | Role | Responsibility |
 |------|------|----------------|
-| Marat Turarbek | SRE Lead | Architecture, Terraform, CI/CD |
-| [Name] | Observability Engineer | Prometheus, Grafana, Alerting |
-| [Name] | Operations Engineer | HPA, Load Testing, SLOs |
-| [Name] | DevOps Engineer | Docker, K8s, Automation |
+| Marat Turarbek | SRE Lead              | Architecture, Terraform, CI/CD   |
+| Erik Abai      | Observability Engineer | Prometheus, Grafana, Alerting   |
+| Marat Turarbek | Operations Engineer   | HPA, Load Testing, SLOs          |
+| Erik Abai      | DevOps Engineer       | Docker, K8s, Automation          |
 
 ## Project Structure
 
