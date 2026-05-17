@@ -1,0 +1,105 @@
+groups:
+  # ── Recording rules (pre-aggregate SLIs) ────────────────────────────────────
+  - name: sli_recording_rules
+    interval: 30s
+    rules:
+      - record: job:http_requests:rate5m
+        expr: sum(rate(http_requests_total[5m])) by (job)
+
+      - record: job:http_errors:rate5m
+        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) by (job)
+
+      - record: job:http_error_rate:ratio5m
+        expr: |
+          job:http_errors:rate5m
+            /
+          job:http_requests:rate5m
+
+      - record: job:http_latency_p95:5m
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, job)
+          )
+
+      - record: job:http_latency_p99:5m
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, job)
+          )
+
+      # 30-day availability SLI
+      - record: job:http_availability:ratio30d
+        expr: |
+          1 - (
+            sum(increase(http_requests_total{status=~"5.."}[30d]))
+              /
+            sum(increase(http_requests_total[30d]))
+          )
+
+  # ── Alerting rules ───────────────────────────────────────────────────────────
+  - name: sre_alerts
+    rules:
+      - alert: HighErrorRate
+        expr: job:http_error_rate:ratio5m > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate on {{ $labels.job }}"
+          description: >
+            Error rate is {{ $value | humanizePercentage }}
+            (SLO threshold: 5%) — sustained for 2 minutes.
+
+      - alert: HighP95Latency
+        expr: job:http_latency_p95:5m > 0.5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P95 latency exceeds SLO on {{ $labels.job }}"
+          description: >
+            P95 latency is {{ $value | humanizeDuration }}
+            (SLO: 500 ms).
+
+      - alert: HighP99Latency
+        expr: job:http_latency_p99:5m > 1.0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "P99 latency exceeds SLO on {{ $labels.job }}"
+          description: >
+            P99 latency is {{ $value | humanizeDuration }}
+            (SLO: 1 s).
+
+      - alert: ServiceDown
+        expr: up{job="sre-app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "sre-app is unreachable"
+          description: "Prometheus cannot scrape sre-app for more than 1 minute."
+
+      - alert: SLOAvailabilityBreach
+        expr: job:http_availability:ratio30d < 0.995
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Availability SLO breach"
+          description: >
+            30-day availability is {{ $value | humanizePercentage }}
+            (SLO: 99.5%).
+
+      - alert: ErrorBudgetBurningFast
+        expr: |
+          (1 - job:http_availability:ratio30d) > (1 - 0.995) * 2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Error budget burning at 2× allowed rate"
+          description: >
+            At the current error rate the monthly error budget will be
+            exhausted before the period ends.

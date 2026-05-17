@@ -1,0 +1,21 @@
+# Terraform state — never commit real state to git
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfvars
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+
+# Load test output
+load-testing/reports/
+
+# OS
+.DS_Store
+Thumbs.db

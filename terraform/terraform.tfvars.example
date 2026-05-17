@@ -1,0 +1,4 @@
+network_name     = "sre-network"
+app_image        = "ghcr.io/adminsale/tuka/sre-app:latest"
+app_port         = 5000
+grafana_password = "change-me-in-production"
