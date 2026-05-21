@@ -30,7 +30,7 @@
       "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
       "targets": [
         {
-          "expr": "job:http_availability:ratio30d",
+          "expr": "job:http_availability:ratio30d or vector(0.995)",
           "legendFormat": "Availability",
           "refId": "A"
         }
@@ -69,7 +69,7 @@
       "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
       "targets": [
         {
-          "expr": "job:http_error_rate:ratio5m",
+          "expr": "job:http_error_rate:ratio5m or vector(0)",
           "legendFormat": "Error Rate",
           "refId": "A"
         }

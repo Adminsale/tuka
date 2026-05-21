@@ -11,7 +11,7 @@ groups:
 
       - record: job:http_error_rate:ratio5m
         expr: |
-          job:http_errors:rate5m
+          (job:http_errors:rate5m or (job:http_requests:rate5m * 0))
             /
           job:http_requests:rate5m
 
@@ -31,7 +31,7 @@ groups:
       - record: job:http_availability:ratio30d
         expr: |
           1 - (
-            sum(increase(http_requests_total{status=~"5.."}[30d]))
+            (sum(increase(http_requests_total{status=~"5.."}[30d])) or vector(0))
               /
             sum(increase(http_requests_total[30d]))
           )
